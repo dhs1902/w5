@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bubble pop</title>
+  <style>
+    /* 기본 스타일 */
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #1e1e1e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      color: white;
+      transition: background-color 1s ease;
+    }
+
+    h1 {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    /* 이미지 업로드 버튼 스타일 */
+    #upload-label {
+      margin-top: 20px;
+      padding: 12px 24px;
+      background-color: white;
+      color: #1e1e1e;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+
+    #upload-label:hover {
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.7);
+      transform: scale(1.05);
+    }
+
+    #upload-input {
+      display: none;
+    }
+
+    /* 비눗방울 스타일 */
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+      opacity: 0;
+      transition: opacity 0.6s, transform 1s ease;
+      pointer-events: none;
+    }
+
+    /* 비눗방울 터지는 효과 */
+    @keyframes pop {
+      0% { transform: scale(1); opacity: 1; }
+      70% { transform: scale(1.5); opacity: 0.8; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Upload an Image and Watch the Bubbles!</h1>
+  <!-- 이미지 업로드 버튼 -->
+  <label for="upload-input" id="upload-label">이미지 업로드</label>
+  <input type="file" id="upload-input" accept="image/*">
+
+  <!-- 배경 음악 -->
+  <audio id="bg-music" loop autoplay>
+    <source src="your-music-file.mp3" type="audio/mp3">
+    Your browser does not support the audio element.
+  </audio>
+
+  <script>
+    // 이미지 업로드 및 색상 추출
+    const uploadInput = document.getElementById('upload-input');
+
+    uploadInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+
+        img.onload = () => {
+          const mainColor = extractColorsAndCreateBubbles(img);
+          document.body.style.backgroundColor = mainColor;
+          URL.revokeObjectURL(img.src);
+        };
+      }
+    });
+
+    // 색상 추출 및 비눗방울 생성 함수
+    function extractColorsAndCreateBubbles(img) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0, img.width, img.height);
+
+      const colors = [];
+      const step = 50;
+
+      for (let y = 0; y < img.height; y += step) {
+        for (let x = 0; x < img.width; x += step) {
+          const pixel = ctx.getImageData(x, y, 1, 1).data;
+          const color = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+          colors.push(color);
+        }
+      }
+
+      const mainColor = colors[0] || '#1e1e1e';
+      createBubbleEffect(colors);
+      return mainColor;
+    }
+
+    // 비눗방울 효과 함수
+    function createBubbleEffect(colors) {
+      // 기존 비눗방울 제거
+      document.querySelectorAll('.bubble').forEach(bubble => bubble.remove());
+
+      const minBubbleSize = 50;
+      const maxBubbleSize = 150;
+      const bubblesCount = 150; // 비눗방울 수 증가
+      let colorIndex = 0;
+
+      for (let i = 0; i < bubblesCount; i++) {
+        const bubble = document.createElement('div');
+        const bubbleSize = Math.random() * (maxBubbleSize - minBubbleSize) + minBubbleSize;
+
+        bubble.classList.add('bubble');
+        bubble.style.width = `${bubbleSize}px`;
+        bubble.style.height = `${bubbleSize}px`;
+        bubble.style.backgroundColor = colors[colorIndex % colors.length];
+        bubble.style.top = `${Math.random() * window.innerHeight}px`;
+        bubble.style.left = `${Math.random() * window.innerWidth}px`;
+        bubble.style.transitionDelay = `${Math.random() * 0.3}s`;
+        document.body.appendChild(bubble);
+
+        // 크기 및 투명도 설정
+        setTimeout(() => {
+          bubble.style.opacity = '1';
+          bubble.style.transform = `scale(${1 + Math.random() * 0.4})`;
+        }, 100);
+
+        // 터짐 효과
+        setTimeout(() => {
+          bubble.style.animation = 'pop 0.5s forwards';
+        }, 1500 + Math.random() * 1000);
+
+        colorIndex++;
+      }
+    }
+
+    // 배경 음악 제어
+    const bgMusic = document.getElementById('bg-music');
+    bgMusic.volume = 0.1;
+  </script>
+</body>
+</html>
+
+
+
+
+
